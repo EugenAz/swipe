@@ -56,11 +56,12 @@
     }
 
     var element = container.children[0];
-    var slides, slidePos, width, length;
+    var slides, slidePos, width, height, length;
     options = options || {};
     var index = parseInt(options.startSlide, 10) || 0;
     var speed = options.speed || 300;
     options.continuous = options.continuous !== undefined ? options.continuous : true;
+    var verticalAlign = options.verticalAlign || 'top';
 
     // AutoRestart option: auto restart slideshow after user's touch event
     options.autoRestart = options.autoRestart !== undefined ? options.autoRestart : false;
@@ -88,6 +89,11 @@
 
       // determine width of each slide
       width = container.getBoundingClientRect().width || container.offsetWidth;
+
+      // determine height of the 'canvas'
+      height = Math.max.apply(Math, Array.prototype.map.call(slides, function (slide) {
+        return slide.getBoundingClientRect().height || slide.offsetHeight;
+      }));
 
       element.style.width = (slides.length * width) + 'px';
 
@@ -223,6 +229,7 @@
 
       var slide = slides[index];
       var style = slide && slide.style;
+      var verticalOfsetPx;
 
       if (!style) {
         return;
@@ -234,10 +241,48 @@
       style.OTransitionDuration =
       style.transitionDuration = speed + 'ms';
 
-      style.webkitTransform = 'translate(' + dist + 'px,0)' + 'translateZ(0)';
+      verticalOfsetPx = getVerticalOffset(slide);
+
+      style.webkitTransform = 'translate(' + dist + 'px,' + verticalOfsetPx + ')' + 'translateZ(0)';
       style.msTransform =
       style.MozTransform =
-      style.OTransform = 'translateX(' + dist + 'px)';
+      style.OTransform = 'translateX(' + dist + 'px)' + 'translateY(' + verticalOfsetPx + ')';
+
+    }
+
+    function getVerticalOffset(slide) {
+
+      var verticalOfset;
+      getVerticalOffset.result = getVerticalOffset.result || [];
+
+      function getMiddlePosition() {
+        return getBottomPosition() / 2;
+      }
+
+      function getBottomPosition() {
+        var slideHeight = slide.getBoundingClientRect().height || slide.offsetHeight;
+        return height - slideHeight;
+      }
+
+      if (getVerticalOffset.result[slide.src] === undefined) {
+        switch (verticalAlign) {
+          case 'top':
+            verticalOfset = 0;
+            break;
+          case 'middle':
+            verticalOfset = getMiddlePosition() + 'px';
+            break;
+          case 'bottom':
+            verticalOfset = getBottomPosition() + 'px';
+            break;
+          default:
+            verticalOfset = 0;
+        }
+
+        getVerticalOffset.result[slide.src] = verticalOfset;
+      }
+
+      return getVerticalOffset.result[slide.src];
 
     }
 
