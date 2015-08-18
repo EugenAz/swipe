@@ -229,7 +229,7 @@
 
       var slide = slides[index];
       var style = slide && slide.style;
-      var verticalOfsetPx;
+      var verticalOffsetPx;
 
       if (!style) {
         return;
@@ -241,18 +241,18 @@
       style.OTransitionDuration =
       style.transitionDuration = speed + 'ms';
 
-      verticalOfsetPx = getVerticalOffset(slide);
+      verticalOffsetPx = getVerticalOffset(slide);
 
-      style.webkitTransform = 'translate(' + dist + 'px,' + verticalOfsetPx + ')' + 'translateZ(0)';
+      style.webkitTransform = 'translate(' + dist + 'px,' + verticalOffsetPx + ')' + 'translateZ(0)';
       style.msTransform =
       style.MozTransform =
-      style.OTransform = 'translateX(' + dist + 'px)' + 'translateY(' + verticalOfsetPx + ')';
+      style.OTransform = 'translateX(' + dist + 'px)' + 'translateY(' + verticalOffsetPx + ')';
 
     }
 
     function getVerticalOffset(slide) {
 
-      var verticalOfset;
+      var verticalOffset;
       getVerticalOffset.result = getVerticalOffset.result || [];
 
       function getMiddlePosition() {
@@ -264,22 +264,34 @@
         return height - slideHeight;
       }
 
+      // unload cached values on resize
+      if (getVerticalOffset.cachedHeight && getVerticalOffset.cachedHeight !== height) {
+        getVerticalOffset.cachedHeight = null;
+        getVerticalOffset.result = [];
+      }
+
       if (getVerticalOffset.result[slide.src] === undefined) {
         switch (verticalAlign) {
           case 'top':
-            verticalOfset = 0;
+            verticalOffset = 0;
             break;
           case 'middle':
-            verticalOfset = getMiddlePosition() + 'px';
+            verticalOffset = getMiddlePosition() + 'px';
             break;
           case 'bottom':
-            verticalOfset = getBottomPosition() + 'px';
+            verticalOffset = getBottomPosition() + 'px';
             break;
           default:
-            verticalOfset = 0;
+            verticalOffset = 0;
         }
 
-        getVerticalOffset.result[slide.src] = verticalOfset;
+        // cache counted offset
+        getVerticalOffset.result[slide.src] = verticalOffset;
+      }
+
+      // save this to unload cached values on resize
+      if (!getVerticalOffset.cachedHeight) {
+        getVerticalOffset.cachedHeight = height;
       }
 
       return getVerticalOffset.result[slide.src];
